@@ -1,8 +1,10 @@
-import RPi.GPIO as GPIO
+from gpiozero import LED, Buzzer
 import time
 
 buzzer_pin = 13
+buzzer = Buzzer(buzzer_pin)
 ledPinsBCM = [17, 18, 27, 22, 23, 24, 25, 2, 3, 8]  # BCM
+leds = [LED(pin=pin) for pin in ledPinsBCM]
 
 noteLed = {
     "A": 2,  # A = la
@@ -182,39 +184,36 @@ underworld_tempo = [
 
 
 def setup():  # setta il GPIO
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(buzzer_pin, GPIO.OUT)
-    # LED Bar
-    GPIO.setup(ledPinsBCM, GPIO.OUT)  # set all ledPins to OUTPUT mode
-    GPIO.output(ledPinsBCM, GPIO.HIGH)  # make all ledPins output HIGH level, turn off all led
+    for index in range(0, len(ledPinsBCM), 1):
+        leds[index].on()
 
 
 def destroy():
-    GPIO.cleanup()
+    for index in range(0, len(ledPinsBCM), 1):
+        leds[index].close()
 
 
 def play(traccia_audio, tempo, intervallo, note, ritmo=0.800):
     for i in range(0, len(traccia_audio)):  # inizio riproduzione
-
         for x in note:
             if note[x] == traccia_audio[i]:
-                # print(f"Nota: {x} Frequenza: {note[x]}")
+                #print(f"Nota: {x} Frequenza: {note[x]}")
                 for lettera in x:
-                    # print(f"Prima lettera {lettera} pin {noteLed[lettera]}")
+                    #print(f"Prima lettera {lettera} pin {noteLed[lettera]}")
                     """ Accendo il LED Bar """
-                    GPIO.output(noteLed[lettera], GPIO.LOW)
-                    pin = noteLed[lettera]
+                    index = ledPinsBCM.index(noteLed[lettera])
+                    leds[index].off()
+                    pin = index
                     break
                 break
 
         durata_note = ritmo / tempo[i]
-        generatore_onda(traccia_audio[i],
-                        durata_note)  # lancia la funzione generatore_onda che crea un segnale ondulatorio in base alla frequenza della nota data
+        generatore_onda(traccia_audio[i], durata_note)  # lancia la funzione generatore_onda che crea un segnale ondulatorio in base alla frequenza della nota data
 
         intervallo_note = durata_note * intervallo
         time.sleep(intervallo_note)
         """ Spengo il LED Bar """
-        GPIO.output(pin, GPIO.HIGH)
+        leds[pin].on()
 
 
 def generatore_onda(frequenza, durata_note):  # crea la funzione generatore_onda
@@ -226,19 +225,15 @@ def generatore_onda(frequenza, durata_note):  # crea la funzione generatore_onda
     numero_onde = int(durata_note * frequenza)  # numero di onde che verranno generate
 
     for i in range(numero_onde):  # inizia a generare le onde
-
-        GPIO.output(buzzer_pin, True)  # setta il pin HIGH per meta del periodo
+        buzzer.on() # setta il pin HIGH per meta del periodo
         time.sleep(semiperiodo)  # il pin e' in HIGH
-        GPIO.output(buzzer_pin, False)  # setta il pin in LOW per l'altra meta del periodo
+        buzzer.off() # setta il pin in LOW per l'altra meta del periodo
         time.sleep(semiperiodo)  # il pin e' in LOW
 
 
 if __name__ == '__main__':  # il programma parte da qui
     try:
         setup()
-        """
-        loop()
-        """
         print("Super Mario Theme")
         play(super_mario_theme, super_mario_tempo, 1.3, note, 0.800)
         time.sleep(2)
