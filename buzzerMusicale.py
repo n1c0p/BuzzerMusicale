@@ -208,8 +208,9 @@ def play(traccia_audio, tempo, intervallo, note, ritmo=0.800):
                 break
 
         durata_note = ritmo / tempo[i]
-        generatore_onda(traccia_audio[i], durata_note)  # lancia la funzione generatore_onda che crea un segnale ondulatorio in base alla frequenza della nota data
-
+        generatore_onda(traccia_audio[i], durata_note)  # lancia la funzione generatore_onda
+                                                        # che crea un segnale ondulatorio
+                                                        # in base alla frequenza della nota data
         intervallo_note = durata_note * intervallo
         time.sleep(intervallo_note)
         """ Spengo il LED Bar """
